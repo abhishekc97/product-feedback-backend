@@ -29,8 +29,8 @@ app.get("/api/health", function (req, res) {
 });
 
 /** Routes */
-const operations = require("./routes/operations");
-app.use("/api/operations", operations);
+const products = require("./routes/products");
+app.use("/api/products", products);
 
 /** DO NOT WRITE ANY REGULAR API BELOW THIS */
 
