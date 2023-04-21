@@ -4,8 +4,8 @@ const route = Router();
 const Category = require("../models/Category");
 const Product = require("../models/Product");
 
-// create a product
-route.post("/create", async function (req, res, next) {
+// POST request to create a new product
+route.post("/create-new", async function (req, res, next) {
     try {
         const {
             name,
@@ -18,22 +18,29 @@ route.post("/create", async function (req, res, next) {
         } = req.body;
 
         if (!name) {
-            res.status(400).send(
-                "Bad request, check given parameters, product must have name"
-            );
+            return res
+                .status(400)
+                .send(
+                    "Bad request, check given parameters, product must have name"
+                );
         }
-        // Create the categories
-        for (const categoryName of category) {
-            // find collection for a duplicate, do not use callback
+        const categoryArray = category
+            .split(",")
+            .map((category) => category.trim());
+
+        for (const categoryName of categoryArray) {
+            console.log(categoryName);
+            // check collection for a duplicate
             const foundCategory = await Category.find({ name: categoryName });
 
-            // make new category accordingly
+            // make new category if no duplicate
             if (foundCategory.length === 0) {
                 const category = await Category.create({
                     name: categoryName.toLowerCase(),
                 });
             }
         }
+
         const newProduct = {
             name: name,
             category: category,
@@ -46,58 +53,33 @@ route.post("/create", async function (req, res, next) {
         const results = await Product.create(newProduct);
 
         if (results) {
-            res.status(200).send("New product has been added");
-        }
-    } catch (error) {
-        next(error);
-    }
-});
-
-/* get a list of all products with query parameters to filter by product category
- * query param :category (default value of all must be passed to it)
- */
-route.get("/", async function (req, res, next) {
-    try {
-        const category = req.query.category;
-        if (!category) {
-            res.status(400).send("Bad request, check given parameters");
-            return;
-        }
-        // When API receives a specific category
-        const query = {};
-        if (category) {
-            query.category = { $in: [new RegExp(`^${category}$`, "i")] };
-        }
-
-        // If API does not receive specific category
-        if (category === "all") {
-            const results = await Product.find({});
-            res.json(results);
-            return;
+            return res.status(200).send("New product has been added");
         } else {
-            const results = await Product.find(query);
-            res.json(results);
+            return res.status(400).send("Could not make the new product.");
         }
     } catch (error) {
         next(error);
     }
 });
 
-// PUT request to update existing product
+// PUT request to update product using its id
 route.put("/update/:id", async function (req, res, next) {
     try {
         const productId = req.params.id;
         if (!productId) {
-            res.status(400).send("Bad request, check given parameters");
-            return;
+            return res.status(400).send("Bad request, check given parameters");
         }
         const { name, category, description, logoImageURL, productURL } =
             req.body;
 
-        // This API will not modify comments and upvote count intentionally
+        const categoryArray = category
+            .split(",")
+            .map((category) => category.trim());
+        console.log(categoryArray);
+
         const updatedDetails = {
             name: name,
-            category: category,
+            category: categoryArray,
             description: description,
             logoImageURL: logoImageURL,
             productURL: productURL,
@@ -113,7 +95,56 @@ route.put("/update/:id", async function (req, res, next) {
     }
 });
 
-// POST reequest to add a new comment
+/* GET request returns list of all products
+ * Query parameter to filter by product category
+ */
+route.get("/discover/:category", async function (req, res, next) {
+    try {
+        const category = req.params.category;
+        if (!category) {
+            res.status(400).send("Bad request, check given parameters");
+            return;
+        }
+        // When API receives a specific category
+        const query = {};
+        if (category) {
+            query.category = { $in: [new RegExp(`^${category}$`, "i")] };
+        }
+
+        // If API receives default value 'all'
+        if (category === "all") {
+            const results = await Product.find({});
+            res.json(results);
+            return;
+        } else {
+            const results = await Product.find(query);
+            res.json(results);
+        }
+    } catch (error) {
+        next(error);
+    }
+});
+
+// GET request to get a product using its id
+route.get("/:id", async function (req, res, next) {
+    try {
+        const productId = req.params.id;
+        if (!productId) {
+            res.status(400).send("Bad request, check given parameters");
+            return;
+        }
+        const result = await Product.findById(productId);
+        if (!result) {
+            res.status(404).send("No product found with given ID");
+            return;
+        }
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// POST reequest to add a new comment to a product using its id
 route.post("/comment/:id", async function (req, res, next) {
     try {
         const productId = req.params.id;
@@ -134,6 +165,7 @@ route.post("/comment/:id", async function (req, res, next) {
     }
 });
 
+// GET request to upvote a product using its id
 route.get("/upvote/:id", async function (req, res, next) {
     try {
         const productId = req.params.id;
