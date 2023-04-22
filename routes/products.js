@@ -29,7 +29,6 @@ route.post("/create-new", async function (req, res, next) {
             .map((category) => category.trim());
 
         for (const categoryName of categoryArray) {
-            console.log(categoryName);
             // check collection for a duplicate
             const foundCategory = await Category.find({ name: categoryName });
 
@@ -72,24 +71,20 @@ route.put("/update/:id", async function (req, res, next) {
         const { name, category, description, logoImageURL, productURL } =
             req.body;
 
-        const categoryArray = category
-            .split(",")
-            .map((category) => category.trim());
-        console.log(categoryArray);
-
         const updatedDetails = {
             name: name,
-            category: categoryArray,
+            category: category,
             description: description,
             logoImageURL: logoImageURL,
             productURL: productURL,
         };
+
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
             { $set: updatedDetails },
             { new: true }
         );
-        res.json(updatedProduct);
+        res.status(200).json(updatedProduct);
     } catch (error) {
         next(error);
     }

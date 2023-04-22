@@ -42,9 +42,6 @@ app.use("/api/categories", categories);
 const users = require("./routes/users.js");
 app.use("/api/users", users);
 
-const private = require("./routes/private.js");
-app.use("/api/private", authentication, private);
-
 /** DO NOT WRITE ANY REGULAR API BELOW THIS */
 
 // error handler middleware

@@ -1,17 +1,18 @@
 const { Router } = require("express");
-const route = Router();
+
+const generateAuthenticationToken = require("../helper/helper");
 const User = require("../models/User");
 
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
+
+const route = Router();
 
 // POST request to create a new user
 route.post("/register", async function (req, res, next) {
     try {
         // get user details from req body
         const { name, email, mobile, password } = req.body;
-        console.log(req.body);
 
         if (!name || !email || !password) {
             return res
@@ -45,7 +46,6 @@ route.post("/register", async function (req, res, next) {
                 const token = await generateAuthenticationToken(payload);
                 // return the token in response
                 return res.status(200).json({ token: token });
-                // return res.status(200).send("New user created");
             }
         }
     } catch (error) {
@@ -69,11 +69,9 @@ route.post("/login", async function (req, res, next) {
 
         // check db for existing users with same email
         const foundUser = await User.findOne({ email: email });
-        console.log(foundUser);
 
         // error given if no such user exists
         if (!foundUser) {
-            console.log(foundUser);
             return res.status(404).send("User does not exist.");
         }
 
@@ -82,16 +80,13 @@ route.post("/login", async function (req, res, next) {
                 password,
                 foundUser.password
             );
-            console.log("passwordsMatch", passwordsMatch);
 
             if (passwordsMatch) {
                 const payload = { id: foundUser._id, email: foundUser.email };
                 const token = await generateAuthenticationToken(payload);
-                console.log("matched");
                 return res.status(200).json({ token: token });
             } else if (!passwordsMatch) {
                 // possibility of incorrect credentials
-                console.log("didnt match");
                 return res
                     .status(400)
                     .send(
@@ -104,15 +99,5 @@ route.post("/login", async function (req, res, next) {
         next(error);
     }
 });
-
-/** JWT tokenization method, uses payload parameter to generate token. Returns a JWT token */
-async function generateAuthenticationToken(payload) {
-    const token = jwt.sign(payload, process.env.SECRET_KEY, {
-        algorithm: "HS256",
-        expiresIn: "2h",
-    });
-
-    return token;
-}
 
 module.exports = route;
