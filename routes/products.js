@@ -24,21 +24,20 @@ route.post("/create-new", async function (req, res, next) {
                     "Bad request, check given parameters, product must have name"
                 );
         }
-        const categoryArray = category
-            .split(",")
-            .map((category) => category.trim());
 
-        for (const categoryName of categoryArray) {
+        category.map(async (ctg) => {
             // check collection for a duplicate
-            const foundCategory = await Category.find({ name: categoryName });
+            const foundCategory = await Category.findOne({
+                name: { $regex: new RegExp(ctg, "i") },
+            });
 
             // make new category if no duplicate
-            if (foundCategory.length === 0) {
+            if (!foundCategory) {
                 const category = await Category.create({
-                    name: categoryName.toLowerCase(),
+                    name: ctg.toLowerCase(),
                 });
             }
-        }
+        });
 
         const newProduct = {
             name: name,
@@ -78,6 +77,20 @@ route.put("/update/:id", async function (req, res, next) {
             logoImageURL: logoImageURL,
             productURL: productURL,
         };
+
+        category.map(async (ctg) => {
+            // check collection for a duplicate
+            const foundCategory = await Category.findOne({
+                name: { $regex: new RegExp(ctg, "i") },
+            });
+
+            // make new category if no duplicate
+            if (!foundCategory) {
+                const category = await Category.create({
+                    name: ctg.toLowerCase(),
+                });
+            }
+        });
 
         const updatedProduct = await Product.findByIdAndUpdate(
             productId,
