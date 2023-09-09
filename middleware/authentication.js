@@ -18,6 +18,7 @@ const verifyToken = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.SECRET_KEY);
         if (decoded) {
             // auth middleware passed, go to the next function/process
+            req.userId = decoded.userId;
             next();
         } else {
             return res.status(401).send("Invalid Token");

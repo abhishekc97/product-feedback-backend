@@ -4,8 +4,10 @@ const route = Router();
 const Category = require("../models/Category");
 const Product = require("../models/Product");
 
+const authMiddleware = require("../middleware/authentication");
+
 // POST request to create a new product
-route.post("/create-new", async function (req, res, next) {
+route.post("/create-new", authMiddleware, async function (req, res, next) {
     try {
         const {
             name,

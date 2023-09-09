@@ -1,6 +1,6 @@
 const { Router } = require("express");
 
-const generateAuthenticationToken = require("../helper/helper");
+const generateAuthenticationToken = require("../utils/generateJwtToken");
 const User = require("../models/User");
 
 const bcrypt = require("bcrypt");
@@ -41,11 +41,7 @@ route.post("/register", async function (req, res, next) {
         if (!existingUser) {
             const results = await User.create(newUser);
             if (results) {
-                // set the payload to use for generating token
-                const payload = { id: results._id, email: results.email };
-                const token = await generateAuthenticationToken(payload);
-                // return the token in response
-                return res.status(200).json({ token: token });
+                return res.status(200).send("Succesfully registered");
             }
         }
     } catch (error) {
@@ -82,7 +78,7 @@ route.post("/login", async function (req, res, next) {
             );
 
             if (passwordsMatch) {
-                const payload = { id: foundUser._id, email: foundUser.email };
+                const payload = { userId: foundUser._id };
                 const token = await generateAuthenticationToken(payload);
                 return res.status(200).json({ token: token });
             } else if (!passwordsMatch) {

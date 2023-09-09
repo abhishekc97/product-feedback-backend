@@ -9,7 +9,6 @@ const port = process.env.PORT || 3021;
 const host = process.env.HOST || "localhost";
 
 const initializeDatabase = require("./config/mongodb.js");
-const authentication = require("./middleware/authentication.js");
 
 /** Express App setup */
 const app = express();
